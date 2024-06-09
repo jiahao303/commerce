@@ -1,0 +1,74 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h3>Listing: {{listing.title}}</h3>
+    {% if not watchlist %}
+        <form action="{% url 'listing' listing.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_watchlist">
+            <input type="submit" class="btn btn-primary" value="Add Item to Watchlist">
+        </form>
+    {% else %}
+    <span class="badge badge-secondary">Watchlist</span>
+    <form action="{% url 'listing' listing.id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="remove_watchlist">
+        <input type="submit" class="btn btn-primary" value="Remove Item From Watchlist">
+    </form>
+    {% endif %}
+    <br>
+    <img src="{{listing.image}}">
+    <p>{{listing.description}}</p>
+    {% if active %}
+    {{bid|length}} bid(s) so far.
+        {% if owner %}
+            <p>You created the listing.</p>
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="close_auction">
+                <input type="submit" class="btn btn-primary" value="Close Auction">
+            </form>
+        {% else %}
+            {% if winner %}
+                Your bid is the current bid.
+            {% else %}
+                Your bid is not the current bid.
+            {% endif %}
+            {% if error %}
+                Your bid is not at least as the starting bid or less than any other bids that have been placed.
+            {% endif %}
+                <form action="{% url 'listing' listing.id %}" method="post">
+                    {% csrf_token %}
+                    {{ bid_form.as_p }}
+                    <input type="hidden" name="action" value="place_bid">
+                    <input type="submit" class="btn btn-primary" value="Place Bid">
+                </form>
+            {% endif %}
+    {% elif winner %}
+        You won the auction!
+    {% else %}
+        The auction is no longer active.
+    {% endif %}
+    <h3>${{listing.price|floatformat:2}}</h3>
+    <h3>Details</h3>
+    <ul>
+        <li>Listed by: {{listing.user}}</li>
+        <li>Category: {{listing.category}}</li>
+    </ul>
+    <h3>Comments</h3>
+    <form action="{% url 'listing' listing.id %}" method="post">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <input type="hidden" name="action" value="comment">
+        <input type="submit" class="btn btn-primary" value="Add Comment">
+    </form>
+    <br>
+    <div class="list-group">
+    {% for comment in comments %}
+        <div class="list-group-item">
+        <p><strong>{{comment.user}}</strong></p>
+        <p>{{comment.comment}}</p>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}
